@@ -50,14 +50,17 @@ jobs:
         cmake --version
     
     - name: Configure CMake
+      shell: bash
       run: |
         cmake -S . -B cmake-build-debug -DCMAKE_BUILD_TYPE=Debug ${{ matrix.cmake_args }}
     
     - name: Build
+      shell: bash
       run: |
         cmake --build cmake-build-debug --config Debug
     
     - name: Verify executable exists
+      shell: bash
       run: |
         if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
           if [ ! -f "cmake-build-debug/Debug/sw_battle_test.exe" ]; then
@@ -75,6 +78,7 @@ jobs:
     
     - name: Test basic simulation (Ubuntu/macOS)
       if: matrix.os != 'windows-latest'
+      shell: bash
       run: |
         echo "Running basic simulation test..."
         ./cmake-build-debug/sw_battle_test commands_example.txt > simulation_output.txt

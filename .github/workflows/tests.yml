@@ -139,8 +139,13 @@ jobs:
         echo "Testing error handling..."
 
         if [ "$RUNNER_OS" = "Windows" ]; then
-          # Test with non-existent file
-          cmake-build-debug/Debug/sw_battle_test.exe nonexistent.txt 2>error_output.txt && (echo "ERROR: Should have failed with non-existent file" && exit 1)
+          # Test with non-existent file (simplified approach)
+          echo "Testing Windows error handling..."
+          # Use a simple approach that should fail quickly
+          if cmake-build-debug/Debug/sw_battle_test.exe nonexistent.txt >nul 2>&1; then
+            echo "ERROR: Should have failed with non-existent file"
+            exit 1
+          fi
           echo "Error handling test passed (Windows)"
         else
           # Test with non-existent file

@@ -36,7 +36,7 @@ namespace sw::core
 	{
 	public:
 		IHealthStrategy() = default;
-		virtual ~IHealthStrategy() = default;
+		virtual ~IHealthStrategy() noexcept = default;
 		IHealthStrategy(const IHealthStrategy&) = delete;
 		auto operator=(const IHealthStrategy&) -> IHealthStrategy& = delete;
 		IHealthStrategy(IHealthStrategy&&) = delete;

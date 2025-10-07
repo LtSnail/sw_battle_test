@@ -63,12 +63,12 @@ namespace sw::core
 	}
 
 	// Factory function implementations
-	auto createSwordsmanAI() -> std::unique_ptr<IAIStrategy>
+	auto createSwordsmanAI() noexcept -> std::unique_ptr<IAIStrategy>
 	{
 		return std::make_unique<SwordsmanAIStrategy>();
 	}
 
-	auto createHunterAI() -> std::unique_ptr<IAIStrategy>
+	auto createHunterAI() noexcept -> std::unique_ptr<IAIStrategy>
 	{
 		return std::make_unique<HunterAIStrategy>();
 	}

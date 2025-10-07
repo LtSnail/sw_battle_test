@@ -38,7 +38,7 @@ namespace sw::core
 	{
 	public:
 		IAIStrategy() = default;
-		virtual ~IAIStrategy() = default;
+		virtual ~IAIStrategy() noexcept = default;
 		IAIStrategy(const IAIStrategy&) = delete;
 		auto operator=(const IAIStrategy&) -> IAIStrategy& = delete;
 		IAIStrategy(IAIStrategy&&) = delete;
@@ -113,12 +113,12 @@ namespace sw::core
 	 * @brief Factory function for creating swordsman AI strategies
 	 * @return Unique pointer to swordsman AI strategy
 	 */
-	auto createSwordsmanAI() -> std::unique_ptr<IAIStrategy>;
+	auto createSwordsmanAI() noexcept -> std::unique_ptr<IAIStrategy>;
 
 	/**
 	 * @brief Factory function for creating hunter AI strategies
 	 * @return Unique pointer to hunter AI strategy
 	 */
-	auto createHunterAI() -> std::unique_ptr<IAIStrategy>;
+	auto createHunterAI() noexcept -> std::unique_ptr<IAIStrategy>;
 
 }  // namespace sw::core

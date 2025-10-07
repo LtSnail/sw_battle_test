@@ -40,7 +40,7 @@ namespace sw::core
 	{
 	public:
 		IMovementStrategy() = default;
-		virtual ~IMovementStrategy() = default;
+		virtual ~IMovementStrategy() noexcept = default;
 		IMovementStrategy(const IMovementStrategy&) = delete;
 		auto operator=(const IMovementStrategy&) -> IMovementStrategy& = delete;
 		IMovementStrategy(IMovementStrategy&&) = delete;
@@ -111,7 +111,7 @@ namespace sw::core
 		 * @return true (terrain movement blocks ground)
 		 */
 		[[nodiscard]]
-		auto blocksGround() const -> bool override
+		constexpr auto blocksGround() const noexcept -> bool override
 		{
 			return true;
 		}
@@ -121,7 +121,7 @@ namespace sw::core
 		 * @return Step size in grid units
 		 */
 		[[nodiscard]]
-		auto stepSize() const -> RangeValue override
+		constexpr auto stepSize() const noexcept -> RangeValue override
 		{
 			return _step;
 		}

@@ -91,7 +91,7 @@ namespace sw::core
 		return true;  // Default: blocks ground if no movement strategy
 	}
 
-	auto Entity::canMove() const -> bool
+	constexpr auto Entity::canMove() const noexcept -> bool
 	{
 		return _movement.has_value();
 	}

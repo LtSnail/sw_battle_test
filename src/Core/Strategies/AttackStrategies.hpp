@@ -40,7 +40,7 @@ namespace sw::core
 	{
 	public:
 		IAttackStrategy() = default;
-		virtual ~IAttackStrategy() = default;
+		virtual ~IAttackStrategy() noexcept = default;
 		IAttackStrategy(const IAttackStrategy&) = delete;
 		auto operator=(const IAttackStrategy&) -> IAttackStrategy& = delete;
 		IAttackStrategy(IAttackStrategy&&) = delete;
@@ -100,7 +100,7 @@ namespace sw::core
 		 * @return AttackType::Melee
 		 */
 		[[nodiscard]]
-		auto type() const -> AttackType override
+		constexpr auto type() const noexcept -> AttackType override
 		{
 			return AttackType::Melee;
 		}
@@ -120,7 +120,7 @@ namespace sw::core
 		 * @return Damage amount
 		 */
 		[[nodiscard]]
-		auto damage() const -> DamageValue override
+		constexpr auto damage() const noexcept -> DamageValue override
 		{
 			return _damage;
 		}
@@ -167,7 +167,7 @@ namespace sw::core
 		 * @return AttackType::Ranged
 		 */
 		[[nodiscard]]
-		auto type() const -> AttackType override
+		constexpr auto type() const noexcept -> AttackType override
 		{
 			return AttackType::Ranged;
 		}
@@ -187,7 +187,7 @@ namespace sw::core
 		 * @return Damage amount
 		 */
 		[[nodiscard]]
-		auto damage() const -> DamageValue override
+		constexpr auto damage() const noexcept -> DamageValue override
 		{
 			return _damage;
 		}
@@ -199,7 +199,7 @@ namespace sw::core
 		 * @return Minimum range in grid units
 		 */
 		[[nodiscard]]
-		auto minRange() const -> RangeValue
+		constexpr auto minRange() const noexcept -> RangeValue
 		{
 			return _minRange;
 		}
@@ -209,7 +209,7 @@ namespace sw::core
 		 * @return Maximum range in grid units
 		 */
 		[[nodiscard]]
-		auto maxRange() const -> RangeValue
+		constexpr auto maxRange() const noexcept -> RangeValue
 		{
 			return _maxRange;
 		}
@@ -219,7 +219,7 @@ namespace sw::core
 		 * @return true if clear adjacency is required
 		 */
 		[[nodiscard]]
-		auto requiresClearAdjacency() const -> bool
+		constexpr auto requiresClearAdjacency() const noexcept -> bool
 		{
 			return _requireClearAdjacency;
 		}

@@ -67,7 +67,7 @@ namespace sw::core
 		 * @return Unit ID
 		 */
 		[[nodiscard]]
-		auto id() const -> UnitId
+		constexpr auto id() const noexcept -> UnitId
 		{
 			return _id;
 		}
@@ -77,7 +77,7 @@ namespace sw::core
 		 * @return Type name string
 		 */
 		[[nodiscard]]
-		auto typeName() const -> const std::string&
+		auto typeName() const noexcept -> const std::string&
 		{
 			return _typeName;
 		}
@@ -87,7 +87,7 @@ namespace sw::core
 		 * @return Current position on the map
 		 */
 		[[nodiscard]]
-		auto position() const -> Position
+		constexpr auto position() const noexcept -> Position
 		{
 			return _position;
 		}
@@ -96,7 +96,7 @@ namespace sw::core
 		 * @brief Set the position of this entity
 		 * @param position New position on the map
 		 */
-		void setPosition(Position position)
+		constexpr void setPosition(Position position) noexcept
 		{
 			_position = position;
 		}
@@ -176,7 +176,7 @@ namespace sw::core
 		 * @return true if entity has movement component
 		 */
 		[[nodiscard]]
-		auto canMove() const -> bool;
+		constexpr auto canMove() const noexcept -> bool;
 
 	private:
 		// === Core Identity Data ===

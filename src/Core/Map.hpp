@@ -98,7 +98,10 @@ namespace sw::core
 		 * @return true if position is within map bounds
 		 */
 		[[nodiscard]]
-		auto isValidPosition(Position pos) const -> bool;
+		constexpr auto isValidPosition(Position pos) const noexcept -> bool
+		{
+			return pos.isWithin(_width, _height);
+		}
 
 		/**
 		 * @brief Check if a position is blocked by a unit
@@ -106,7 +109,7 @@ namespace sw::core
 		 * @return true if position is blocked by a ground-blocking unit
 		 */
 		[[nodiscard]]
-		auto blocksAt(Position pos) const -> bool;
+		auto blocksAt(Position pos) const noexcept -> bool;
 
 		/**
 		 * @brief Check if a position is occupied by a specific unit
@@ -115,7 +118,7 @@ namespace sw::core
 		 * @return true if the specified unit occupies the position
 		 */
 		[[nodiscard]]
-		auto isPositionOccupiedBy(Position pos, UnitId id) const -> bool;
+		auto isPositionOccupiedBy(Position pos, UnitId id) const noexcept -> bool;
 
 		/**
 		 * @brief Get the unit at a specific position

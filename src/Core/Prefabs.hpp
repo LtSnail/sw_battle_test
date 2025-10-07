@@ -72,7 +72,8 @@ namespace sw::core
 	 * @param config Swordsman configuration containing health and strength
 	 * @return Unique pointer to the created swordsman entity
 	 */
-	inline auto makeSwordsman(UnitId id, Position pos, const SwordsmanConfig& config) -> std::unique_ptr<Entity>
+	inline auto makeSwordsman(UnitId id, Position pos, const SwordsmanConfig& config) noexcept
+		-> std::unique_ptr<Entity>
 	{
 		auto entity = std::make_unique<Entity>(id, pos, "Swordsman");
 		entity->setHealth(createBasicHealth(config.hp));
@@ -101,7 +102,7 @@ namespace sw::core
 	 * @param config Hunter configuration containing hp, agility, strength, and range
 	 * @return Unique pointer to the created hunter entity
 	 */
-	inline auto makeHunter(UnitId id, Position pos, const HunterConfig& config) -> std::unique_ptr<Entity>
+	inline auto makeHunter(UnitId id, Position pos, const HunterConfig& config) noexcept -> std::unique_ptr<Entity>
 	{
 		auto entity = std::make_unique<Entity>(id, pos, "Hunter");
 		entity->setHealth(createBasicHealth(config.hp));

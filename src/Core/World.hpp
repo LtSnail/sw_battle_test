@@ -81,7 +81,7 @@ namespace sw::core
 		 * @brief Get the spatial map system
 		 * @return Reference to the map for spatial operations
 		 */
-		auto map() -> Map&
+		auto map() noexcept -> Map&
 		{
 			return _map;
 		}
@@ -91,7 +91,7 @@ namespace sw::core
 		 * @return Const reference to the map for spatial operations
 		 */
 		[[nodiscard]]
-		auto map() const -> const Map&
+		auto map() const noexcept -> const Map&
 		{
 			return _map;
 		}
@@ -111,7 +111,7 @@ namespace sw::core
 		 * @return Const reference to the entity order vector
 		 */
 		[[nodiscard]]
-		auto entityOrder() const -> const std::vector<UnitId>&
+		auto entityOrder() const noexcept -> const std::vector<UnitId>&
 		{
 			return _entityOrder;
 		}
@@ -120,7 +120,7 @@ namespace sw::core
 		 * @brief Get the entity turn order for modification
 		 * @return Reference to the entity order vector
 		 */
-		auto entityOrder() -> std::vector<UnitId>&
+		auto entityOrder() noexcept -> std::vector<UnitId>&
 		{
 			return _entityOrder;
 		}

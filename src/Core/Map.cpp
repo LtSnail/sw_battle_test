@@ -78,17 +78,12 @@ namespace sw::core
 		return true;
 	}
 
-	auto Map::isValidPosition(const Position pos) const -> bool
-	{
-		return pos.x < _width && pos.y < _height;
-	}
-
-	auto Map::blocksAt(Position pos) const -> bool
+	auto Map::blocksAt(Position pos) const noexcept -> bool
 	{
 		return _blockedPositions.contains(pos);
 	}
 
-	auto Map::isPositionOccupiedBy(const Position pos, const UnitId id) const -> bool
+	auto Map::isPositionOccupiedBy(const Position pos, const UnitId id) const noexcept -> bool
 	{
 		const auto it = _unitPositions.find(id);
 		return it != _unitPositions.end() && it->second == pos;

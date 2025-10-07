@@ -11,7 +11,7 @@
 
 #include <algorithm>  // For std::max
 #include <cstddef>
-#include <cstdint>    // For uint32_t, std::uint8_t
+#include <cstdint>	// For uint32_t, std::uint8_t
 #include <cstdlib>
 #include <functional>
 
@@ -76,14 +76,14 @@ namespace sw::core
 		/**
 		 * @brief Equality comparison for positions
 		 */
-		auto operator==(const Position& other) const -> bool = default;
+		auto operator==(const Position& other) const noexcept -> bool = default;
 
 		/**
 		 * @brief Lexicographical ordering for use in ordered containers
 		 *
 		 * Provides consistent ordering: (x1,y1) < (x2,y2) if x1 < x2 or (x1 == x2 and y1 < y2)
 		 */
-		auto operator<(const Position& other) const -> bool
+		constexpr auto operator<(const Position& other) const noexcept -> bool
 		{
 			return x < other.x || (x == other.x && y < other.y);
 		}
@@ -99,7 +99,7 @@ namespace sw::core
 		 * @return Distance in grid units
 		 */
 		[[nodiscard]]
-		auto distanceTo(const Position& other) const -> uint32_t
+		constexpr auto distanceTo(const Position& other) const noexcept -> uint32_t
 		{
 			return std::max(
 				std::abs(static_cast<int32_t>(x) - static_cast<int32_t>(other.x)),
@@ -114,7 +114,7 @@ namespace sw::core
 		 * @return true if position is valid within the map bounds
 		 */
 		[[nodiscard]]
-		auto isWithin(uint32_t mapWidth, uint32_t mapHeight) const -> bool
+		constexpr auto isWithin(uint32_t mapWidth, uint32_t mapHeight) const noexcept -> bool
 		{
 			return x < mapWidth && y < mapHeight;
 		}
@@ -137,7 +137,7 @@ struct std::hash<sw::core::Position>
 	 * @param pos Position to hash
 	 * @return Hash value suitable for unordered containers
 	 */
-	auto operator()(const sw::core::Position& pos) const noexcept -> size_t
+	constexpr auto operator()(const sw::core::Position& pos) const noexcept -> size_t
 	{
 		return std::hash<uint32_t>{}(pos.x) ^ (std::hash<uint32_t>{}(pos.y) << 1);
 	}

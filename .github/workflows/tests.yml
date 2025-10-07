@@ -43,9 +43,11 @@ jobs:
     
     - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
+      shell: cmd
       run: |
-        # Install CMake
-        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        # CMake is included with Visual Studio Build Tools
+        # Verify cmake is available
+        cmake --version
     
     - name: Configure CMake
       run: |
@@ -81,6 +83,7 @@ jobs:
     
     - name: Test basic simulation (Windows)
       if: matrix.os == 'windows-latest'
+      shell: cmd
       run: |
         echo "Running basic simulation test..."
         cmake-build-debug\Debug\sw_battle_test.exe commands_example.txt > simulation_output.txt
@@ -88,32 +91,18 @@ jobs:
         type simulation_output.txt
     
     - name: Validate simulation results
+      shell: cmd
       run: |
         echo "Validating simulation output..."
-        
+
         # Check for expected events in the output
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          if (! findstr /C:"MAP_CREATED" simulation_output.txt > nul); then
-            echo "ERROR: MAP_CREATED event not found"
-            exit 1
-          fi
-          if (! findstr /C:"UNIT_SPAWNED" simulation_output.txt > nul); then
-            echo "ERROR: UNIT_SPAWNED events not found"
-            exit 1
-          fi
-          if (! findstr /C:"MARCH_STARTED" simulation_output.txt > nul); then
-            echo "ERROR: MARCH_STARTED events not found"
-            exit 1
-          fi
-          if (! findstr /C:"SIMULATION_STARTED" simulation_output.txt > nul); then
-            echo "ERROR: SIMULATION_STARTED event not found"
-            exit 1
-          fi
-          if (! findstr /C:"SIMULATION_ENDED" simulation_output.txt > nul); then
-            echo "ERROR: SIMULATION_ENDED event not found"
-            exit 1
-          fi
-        else
+        if "%RUNNER_OS%" == "Windows" (
+          findstr /C:"MAP_CREATED" simulation_output.txt >nul || (echo "ERROR: MAP_CREATED event not found" && exit 1)
+          findstr /C:"UNIT_SPAWNED" simulation_output.txt >nul || (echo "ERROR: UNIT_SPAWNED events not found" && exit 1)
+          findstr /C:"MARCH_STARTED" simulation_output.txt >nul || (echo "ERROR: MARCH_STARTED events not found" && exit 1)
+          findstr /C:"SIMULATION_STARTED" simulation_output.txt >nul || (echo "ERROR: SIMULATION_STARTED event not found" && exit 1)
+          findstr /C:"SIMULATION_ENDED" simulation_output.txt >nul || (echo "ERROR: SIMULATION_ENDED event not found" && exit 1)
+        ) else (
           if ! grep -q "MAP_CREATED" simulation_output.txt; then
             echo "ERROR: MAP_CREATED event not found"
             exit 1
@@ -134,87 +123,104 @@ jobs:
             echo "ERROR: SIMULATION_ENDED event not found"
             exit 1
           fi
-        fi
+        )
         
         echo "✅ All required events found in simulation output"
     
     - name: Test error handling
+      shell: cmd
       run: |
         echo "Testing error handling..."
-        
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+
+        if "%RUNNER_OS%" == "Windows" (
           # Test with non-existent file
-          if (cmake-build-debug\Debug\sw_battle_test.exe nonexistent.txt 2>error_output.txt); then
-            echo "ERROR: Should have failed with non-existent file"
-            exit 1
-          fi
+          cmake-build-debug\Debug\sw_battle_test.exe nonexistent.txt 2>error_output.txt && (echo "ERROR: Should have failed with non-existent file" && exit 1)
           echo "Error handling test passed (Windows)"
-        else
+        ) else (
           # Test with non-existent file
           if ./cmake-build-debug/sw_battle_test nonexistent.txt 2>error_output.txt; then
             echo "ERROR: Should have failed with non-existent file"
             exit 1
           fi
           echo "Error handling test passed"
-        fi
+        )
     
     - name: Count simulation events
+      shell: cmd
       run: |
         echo "Analyzing simulation output..."
-        
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          MAP_EVENTS=$(findstr /C:"MAP_CREATED" simulation_output.txt | find /C /V "")
-          UNIT_SPAWNED=$(findstr /C:"UNIT_SPAWNED" simulation_output.txt | find /C /V "")
-          MARCH_STARTED=$(findstr /C:"MARCH_STARTED" simulation_output.txt | find /C /V "")
-          UNIT_MOVED=$(findstr /C:"UNIT_MOVED" simulation_output.txt | find /C /V "")
-          UNIT_ATTACKED=$(findstr /C:"UNIT_ATTACKED" simulation_output.txt | find /C /V "")
-          SIMULATION_STARTED=$(findstr /C:"SIMULATION_STARTED" simulation_output.txt | find /C /V "")
-          SIMULATION_ENDED=$(findstr /C:"SIMULATION_ENDED" simulation_output.txt | find /C /V "")
-        else
-          MAP_EVENTS=$(grep -c "MAP_CREATED" simulation_output.txt)
-          UNIT_SPAWNED=$(grep -c "UNIT_SPAWNED" simulation_output.txt)
-          MARCH_STARTED=$(grep -c "MARCH_STARTED" simulation_output.txt)
-          UNIT_MOVED=$(grep -c "UNIT_MOVED" simulation_output.txt)
-          UNIT_ATTACKED=$(grep -c "UNIT_ATTACKED" simulation_output.txt)
-          SIMULATION_STARTED=$(grep -c "SIMULATION_STARTED" simulation_output.txt)
-          SIMULATION_ENDED=$(grep -c "SIMULATION_ENDED" simulation_output.txt)
-        fi
+
+        if "%RUNNER_OS%" == "Windows" (
+          for /f %%i in ('findstr /C:"MAP_CREATED" simulation_output.txt ^| find /C /V ""') do set MAP_EVENTS=%%i
+          for /f %%i in ('findstr /C:"UNIT_SPAWNED" simulation_output.txt ^| find /C /V ""') do set UNIT_SPAWNED=%%i
+          for /f %%i in ('findstr /C:"MARCH_STARTED" simulation_output.txt ^| find /C /V ""') do set MARCH_STARTED=%%i
+          for /f %%i in ('findstr /C:"UNIT_MOVED" simulation_output.txt ^| find /C /V ""') do set UNIT_MOVED=%%i
+          for /f %%i in ('findstr /C:"UNIT_ATTACKED" simulation_output.txt ^| find /C /V ""') do set UNIT_ATTACKED=%%i
+          for /f %%i in ('findstr /C:"SIMULATION_STARTED" simulation_output.txt ^| find /C /V ""') do set SIMULATION_STARTED=%%i
+          for /f %%i in ('findstr /C:"SIMULATION_ENDED" simulation_output.txt ^| find /C /V ""') do set SIMULATION_ENDED=%%i
+        ) else (
+          set MAP_EVENTS=$(grep -c "MAP_CREATED" simulation_output.txt)
+          set UNIT_SPAWNED=$(grep -c "UNIT_SPAWNED" simulation_output.txt)
+          set MARCH_STARTED=$(grep -c "MARCH_STARTED" simulation_output.txt)
+          set UNIT_MOVED=$(grep -c "UNIT_MOVED" simulation_output.txt)
+          set UNIT_ATTACKED=$(grep -c "UNIT_ATTACKED" simulation_output.txt)
+          set SIMULATION_STARTED=$(grep -c "SIMULATION_STARTED" simulation_output.txt)
+          set SIMULATION_ENDED=$(grep -c "SIMULATION_ENDED" simulation_output.txt)
+        )
         
         echo "📊 Simulation Event Summary:"
-        echo "  MAP_CREATED: $MAP_EVENTS"
-        echo "  UNIT_SPAWNED: $UNIT_SPAWNED"
-        echo "  MARCH_STARTED: $MARCH_STARTED"
-        echo "  UNIT_MOVED: $UNIT_MOVED"
-        echo "  UNIT_ATTACKED: $UNIT_ATTACKED"
-        echo "  SIMULATION_STARTED: $SIMULATION_STARTED"
-        echo "  SIMULATION_ENDED: $SIMULATION_ENDED"
-        
+        if "%RUNNER_OS%" == "Windows" (
+          echo "  MAP_CREATED: %MAP_EVENTS%"
+          echo "  UNIT_SPAWNED: %UNIT_SPAWNED%"
+          echo "  MARCH_STARTED: %MARCH_STARTED%"
+          echo "  UNIT_MOVED: %UNIT_MOVED%"
+          echo "  UNIT_ATTACKED: %UNIT_ATTACKED%"
+          echo "  SIMULATION_STARTED: %SIMULATION_STARTED%"
+          echo "  SIMULATION_ENDED: %SIMULATION_ENDED%"
+        ) else (
+          echo "  MAP_CREATED: $MAP_EVENTS"
+          echo "  UNIT_SPAWNED: $UNIT_SPAWNED"
+          echo "  MARCH_STARTED: $MARCH_STARTED"
+          echo "  UNIT_MOVED: $UNIT_MOVED"
+          echo "  UNIT_ATTACKED: $UNIT_ATTACKED"
+          echo "  SIMULATION_STARTED: $SIMULATION_STARTED"
+          echo "  SIMULATION_ENDED: $SIMULATION_ENDED"
+        )
+
         # Validate expected counts
-        if [ "$MAP_EVENTS" -ne 1 ]; then
-          echo "ERROR: Expected exactly 1 MAP_CREATED event, got $MAP_EVENTS"
-          exit 1
-        fi
-        
-        if [ "$UNIT_SPAWNED" -ne 3 ]; then
-          echo "ERROR: Expected exactly 3 UNIT_SPAWNED events, got $UNIT_SPAWNED"
-          exit 1
-        fi
-        
-        if [ "$MARCH_STARTED" -ne 3 ]; then
-          echo "ERROR: Expected exactly 3 MARCH_STARTED events, got $MARCH_STARTED"
-          exit 1
-        fi
-        
-        if [ "$SIMULATION_STARTED" -ne 1 ]; then
-          echo "ERROR: Expected exactly 1 SIMULATION_STARTED event, got $SIMULATION_STARTED"
-          exit 1
-        fi
-        
-        if [ "$SIMULATION_ENDED" -ne 1 ]; then
-          echo "ERROR: Expected exactly 1 SIMULATION_ENDED event, got $SIMULATION_ENDED"
-          exit 1
-        fi
-        
+        if "%RUNNER_OS%" == "Windows" (
+          if %MAP_EVENTS% NEQ 1 (echo "ERROR: Expected exactly 1 MAP_CREATED event, got %MAP_EVENTS%" && exit 1)
+          if %UNIT_SPAWNED% NEQ 3 (echo "ERROR: Expected exactly 3 UNIT_SPAWNED events, got %UNIT_SPAWNED%" && exit 1)
+          if %MARCH_STARTED% NEQ 3 (echo "ERROR: Expected exactly 3 MARCH_STARTED events, got %MARCH_STARTED%" && exit 1)
+          if %SIMULATION_STARTED% NEQ 1 (echo "ERROR: Expected exactly 1 SIMULATION_STARTED event, got %SIMULATION_STARTED%" && exit 1)
+          if %SIMULATION_ENDED% NEQ 1 (echo "ERROR: Expected exactly 1 SIMULATION_ENDED event, got %SIMULATION_ENDED%" && exit 1)
+        ) else (
+          if [ "$MAP_EVENTS" -ne 1 ]; then
+            echo "ERROR: Expected exactly 1 MAP_CREATED event, got $MAP_EVENTS"
+            exit 1
+          fi
+
+          if [ "$UNIT_SPAWNED" -ne 3 ]; then
+            echo "ERROR: Expected exactly 3 UNIT_SPAWNED events, got $UNIT_SPAWNED"
+            exit 1
+          fi
+
+          if [ "$MARCH_STARTED" -ne 3 ]; then
+            echo "ERROR: Expected exactly 3 MARCH_STARTED events, got $MARCH_STARTED"
+            exit 1
+          fi
+
+          if [ "$SIMULATION_STARTED" -ne 1 ]; then
+            echo "ERROR: Expected exactly 1 SIMULATION_STARTED event, got $SIMULATION_STARTED"
+            exit 1
+          fi
+
+          if [ "$SIMULATION_ENDED" -ne 1 ]; then
+            echo "ERROR: Expected exactly 1 SIMULATION_ENDED event, got $SIMULATION_ENDED"
+            exit 1
+          fi
+        )
+
         echo "✅ Event count validation passed"
     
     - name: Upload simulation output as artifact

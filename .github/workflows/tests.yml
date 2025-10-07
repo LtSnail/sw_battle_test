@@ -90,42 +90,45 @@ jobs:
       shell: cmd
       run: |
         echo "Running basic simulation test..."
-        cmake-build-debug\Debug\sw_battle_test.exe commands_example.txt > simulation_output.txt
+        cmake-build-debug\Debug\sw_battle_test.exe commands_example.txt > simulation_output.txt 2>&1
         echo "Simulation output:"
         type simulation_output.txt
+        echo "Exit code: %ERRORLEVEL%"
     
     - name: Validate simulation results
       shell: bash
       run: |
         echo "Validating simulation output..."
 
-        if [ "$RUNNER_OS" = "Windows" ]; then
-          findstr /C:"MAP_CREATED" simulation_output.txt >nul || (echo "ERROR: MAP_CREATED event not found" && exit 1)
-          findstr /C:"UNIT_SPAWNED" simulation_output.txt >nul || (echo "ERROR: UNIT_SPAWNED events not found" && exit 1)
-          findstr /C:"MARCH_STARTED" simulation_output.txt >nul || (echo "ERROR: MARCH_STARTED events not found" && exit 1)
-          findstr /C:"SIMULATION_STARTED" simulation_output.txt >nul || (echo "ERROR: SIMULATION_STARTED event not found" && exit 1)
-          findstr /C:"SIMULATION_ENDED" simulation_output.txt >nul || (echo "ERROR: SIMULATION_ENDED event not found" && exit 1)
-        else
-          if ! grep -q "MAP_CREATED" simulation_output.txt; then
-            echo "ERROR: MAP_CREATED event not found"
-            exit 1
-          fi
-          if ! grep -q "UNIT_SPAWNED" simulation_output.txt; then
-            echo "ERROR: UNIT_SPAWNED events not found"
-            exit 1
-          fi
-          if ! grep -q "MARCH_STARTED" simulation_output.txt; then
-            echo "ERROR: MARCH_STARTED events not found"
-            exit 1
-          fi
-          if ! grep -q "SIMULATION_STARTED" simulation_output.txt; then
-            echo "ERROR: SIMULATION_STARTED event not found"
-            exit 1
-          fi
-          if ! grep -q "SIMULATION_ENDED" simulation_output.txt; then
-            echo "ERROR: SIMULATION_ENDED event not found"
-            exit 1
-          fi
+        # Check if output file exists and has content
+        if [ ! -s simulation_output.txt ]; then
+          echo "ERROR: Simulation output file is empty or doesn't exist"
+          echo "Simulation may have failed to run"
+          exit 1
+        fi
+
+        # Check for expected events (same logic for all platforms)
+        if ! grep -q "MAP_CREATED" simulation_output.txt; then
+          echo "ERROR: MAP_CREATED event not found in simulation output"
+          echo "Simulation output contents:"
+          cat simulation_output.txt
+          exit 1
+        fi
+        if ! grep -q "UNIT_SPAWNED" simulation_output.txt; then
+          echo "ERROR: UNIT_SPAWNED events not found in simulation output"
+          exit 1
+        fi
+        if ! grep -q "MARCH_STARTED" simulation_output.txt; then
+          echo "ERROR: MARCH_STARTED events not found in simulation output"
+          exit 1
+        fi
+        if ! grep -q "SIMULATION_STARTED" simulation_output.txt; then
+          echo "ERROR: SIMULATION_STARTED event not found in simulation output"
+          exit 1
+        fi
+        if ! grep -q "SIMULATION_ENDED" simulation_output.txt; then
+          echo "ERROR: SIMULATION_ENDED event not found in simulation output"
+          exit 1
         fi
         
         echo "✅ All required events found in simulation output"

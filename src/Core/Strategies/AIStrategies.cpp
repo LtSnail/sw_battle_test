@@ -1,64 +1,14 @@
 #include "AIStrategies.hpp"
 
+#include "../AI.hpp"
 #include "../Entity.hpp"
+#include "../Types.hpp"
 #include "../World.hpp"
-#include "Core/Types.hpp"
 
-#include <algorithm>
-#include <limits>
 #include <memory>
-#include <random>
-#include <ranges>
-#include <vector>
 
 namespace sw::core
 {
-	namespace detail
-	{
-		inline auto randomEngine() -> std::mt19937&
-		{
-			static std::mt19937 engine(std::random_device{}());
-			return engine;
-		}
-
-		inline void shuffleEnemies(std::vector<Entity*>& enemies)
-		{
-			auto& rng = randomEngine();
-			std::ranges::shuffle(enemies, rng);
-		}
-
-		inline auto gatherEnemies(const Entity& self, World& world) -> std::vector<Entity*>
-		{
-			std::vector<Entity*> enemies;
-			enemies.reserve(world.entities().size());
-			for (auto& entity : world.entities() | std::views::values)
-			{
-				if (!entity || entity->id() == self.id() || !entity->isAlive())
-				{
-					continue;
-				}
-				enemies.push_back(entity.get());
-			}
-
-			shuffleEnemies(enemies);
-			return enemies;
-		}
-
-		inline auto findNearestEnemy(const Entity& self, const std::vector<Entity*>& enemies) -> Entity*
-		{
-			Entity* nearest = nullptr;
-			uint32_t bestDist = std::numeric_limits<uint32_t>::max();
-			for (auto* enemy : enemies)
-			{
-				if (const uint32_t dist = self.position().distanceTo(enemy->position()); dist < bestDist)
-				{
-					bestDist = dist;
-					nearest = enemy;
-				}
-			}
-			return nearest;
-		}
-	}
 
 	auto SwordsmanAIStrategy::update(Entity& self, World& world, const TurnNumber turn) -> bool
 	{

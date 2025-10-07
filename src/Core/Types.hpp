@@ -137,7 +137,7 @@ struct std::hash<sw::core::Position>
 	 * @param pos Position to hash
 	 * @return Hash value suitable for unordered containers
 	 */
-	constexpr auto operator()(const sw::core::Position& pos) const noexcept -> size_t
+	auto operator()(const sw::core::Position& pos) const noexcept -> size_t
 	{
 		return std::hash<uint32_t>{}(pos.x) ^ (std::hash<uint32_t>{}(pos.y) << 1);
 	}

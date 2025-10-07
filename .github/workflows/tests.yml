@@ -153,74 +153,48 @@ jobs:
       run: |
         echo "Analyzing simulation output..."
 
-        if [ "$RUNNER_OS" = "Windows" ]; then
-          for /f %%i in ('findstr /C:"MAP_CREATED" simulation_output.txt ^| find /C /V ""') do set MAP_EVENTS=%%i
-          for /f %%i in ('findstr /C:"UNIT_SPAWNED" simulation_output.txt ^| find /C /V ""') do set UNIT_SPAWNED=%%i
-          for /f %%i in ('findstr /C:"MARCH_STARTED" simulation_output.txt ^| find /C /V ""') do set MARCH_STARTED=%%i
-          for /f %%i in ('findstr /C:"UNIT_MOVED" simulation_output.txt ^| find /C /V ""') do set UNIT_MOVED=%%i
-          for /f %%i in ('findstr /C:"UNIT_ATTACKED" simulation_output.txt ^| find /C /V ""') do set UNIT_ATTACKED=%%i
-          for /f %%i in ('findstr /C:"SIMULATION_STARTED" simulation_output.txt ^| find /C /V ""') do set SIMULATION_STARTED=%%i
-          for /f %%i in ('findstr /C:"SIMULATION_ENDED" simulation_output.txt ^| find /C /V ""') do set SIMULATION_ENDED=%%i
-        else
-          MAP_EVENTS=$(grep -c "MAP_CREATED" simulation_output.txt)
-          UNIT_SPAWNED=$(grep -c "UNIT_SPAWNED" simulation_output.txt)
-          MARCH_STARTED=$(grep -c "MARCH_STARTED" simulation_output.txt)
-          UNIT_MOVED=$(grep -c "UNIT_MOVED" simulation_output.txt)
-          UNIT_ATTACKED=$(grep -c "UNIT_ATTACKED" simulation_output.txt)
-          SIMULATION_STARTED=$(grep -c "SIMULATION_STARTED" simulation_output.txt)
-          SIMULATION_ENDED=$(grep -c "SIMULATION_ENDED" simulation_output.txt)
-        fi
+        # Count events using grep (works on all platforms)
+        MAP_EVENTS=$(grep -c "MAP_CREATED" simulation_output.txt || echo "0")
+        UNIT_SPAWNED=$(grep -c "UNIT_SPAWNED" simulation_output.txt || echo "0")
+        MARCH_STARTED=$(grep -c "MARCH_STARTED" simulation_output.txt || echo "0")
+        UNIT_MOVED=$(grep -c "UNIT_MOVED" simulation_output.txt || echo "0")
+        UNIT_ATTACKED=$(grep -c "UNIT_ATTACKED" simulation_output.txt || echo "0")
+        SIMULATION_STARTED=$(grep -c "SIMULATION_STARTED" simulation_output.txt || echo "0")
+        SIMULATION_ENDED=$(grep -c "SIMULATION_ENDED" simulation_output.txt || echo "0")
 
         echo "📊 Simulation Event Summary:"
-        if [ "$RUNNER_OS" = "Windows" ]; then
-          echo "  MAP_CREATED: %MAP_EVENTS%"
-          echo "  UNIT_SPAWNED: %UNIT_SPAWNED%"
-          echo "  MARCH_STARTED: %MARCH_STARTED%"
-          echo "  UNIT_MOVED: %UNIT_MOVED%"
-          echo "  UNIT_ATTACKED: %UNIT_ATTACKED%"
-          echo "  SIMULATION_STARTED: %SIMULATION_STARTED%"
-          echo "  SIMULATION_ENDED: %SIMULATION_ENDED%"
-        else
-          echo "  MAP_CREATED: $MAP_EVENTS"
-          echo "  UNIT_SPAWNED: $UNIT_SPAWNED"
-          echo "  MARCH_STARTED: $MARCH_STARTED"
-          echo "  UNIT_MOVED: $UNIT_MOVED"
-          echo "  UNIT_ATTACKED: $UNIT_ATTACKED"
-          echo "  SIMULATION_STARTED: $SIMULATION_STARTED"
-          echo "  SIMULATION_ENDED: $SIMULATION_ENDED"
+        echo "  MAP_CREATED: $MAP_EVENTS"
+        echo "  UNIT_SPAWNED: $UNIT_SPAWNED"
+        echo "  MARCH_STARTED: $MARCH_STARTED"
+        echo "  UNIT_MOVED: $UNIT_MOVED"
+        echo "  UNIT_ATTACKED: $UNIT_ATTACKED"
+        echo "  SIMULATION_STARTED: $SIMULATION_STARTED"
+        echo "  SIMULATION_ENDED: $SIMULATION_ENDED"
+
+        # Validate expected counts (same for all platforms)
+        if [ "$MAP_EVENTS" -ne 1 ]; then
+          echo "ERROR: Expected exactly 1 MAP_CREATED event, got $MAP_EVENTS"
+          exit 1
         fi
 
-        if [ "$RUNNER_OS" = "Windows" ]; then
-          if %MAP_EVENTS% NEQ 1 (echo "ERROR: Expected exactly 1 MAP_CREATED event, got %MAP_EVENTS%" && exit 1)
-          if %UNIT_SPAWNED% NEQ 3 (echo "ERROR: Expected exactly 3 UNIT_SPAWNED events, got %UNIT_SPAWNED%" && exit 1)
-          if %MARCH_STARTED% NEQ 3 (echo "ERROR: Expected exactly 3 MARCH_STARTED events, got %MARCH_STARTED%" && exit 1)
-          if %SIMULATION_STARTED% NEQ 1 (echo "ERROR: Expected exactly 1 SIMULATION_STARTED event, got %SIMULATION_STARTED%" && exit 1)
-          if %SIMULATION_ENDED% NEQ 1 (echo "ERROR: Expected exactly 1 SIMULATION_ENDED event, got %SIMULATION_ENDED%" && exit 1)
-        else
-          if [ "$MAP_EVENTS" -ne 1 ]; then
-            echo "ERROR: Expected exactly 1 MAP_CREATED event, got $MAP_EVENTS"
-            exit 1
-          fi
+        if [ "$UNIT_SPAWNED" -ne 3 ]; then
+          echo "ERROR: Expected exactly 3 UNIT_SPAWNED events, got $UNIT_SPAWNED"
+          exit 1
+        fi
 
-          if [ "$UNIT_SPAWNED" -ne 3 ]; then
-            echo "ERROR: Expected exactly 3 UNIT_SPAWNED events, got $UNIT_SPAWNED"
-            exit 1
-          fi
+        if [ "$MARCH_STARTED" -ne 3 ]; then
+          echo "ERROR: Expected exactly 3 MARCH_STARTED events, got $MARCH_STARTED"
+          exit 1
+        fi
 
-          if [ "$MARCH_STARTED" -ne 3 ]; then
-            echo "ERROR: Expected exactly 3 MARCH_STARTED events, got $MARCH_STARTED"
-            exit 1
-          fi
+        if [ "$SIMULATION_STARTED" -ne 1 ]; then
+          echo "ERROR: Expected exactly 1 SIMULATION_STARTED event, got $SIMULATION_STARTED"
+          exit 1
+        fi
 
-          if [ "$SIMULATION_STARTED" -ne 1 ]; then
-            echo "ERROR: Expected exactly 1 SIMULATION_STARTED event, got $SIMULATION_STARTED"
-            exit 1
-          fi
-
-          if [ "$SIMULATION_ENDED" -ne 1 ]; then
-            echo "ERROR: Expected exactly 1 SIMULATION_ENDED event, got $SIMULATION_ENDED"
-            exit 1
-          fi
+        if [ "$SIMULATION_ENDED" -ne 1 ]; then
+          echo "ERROR: Expected exactly 1 SIMULATION_ENDED event, got $SIMULATION_ENDED"
+          exit 1
         fi
 
         echo "✅ Event count validation passed"

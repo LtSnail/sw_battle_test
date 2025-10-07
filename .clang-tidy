@@ -1,0 +1,23 @@
+---
+Checks: >
+  -*, 
+  bugprone-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -readability-identifier-length,
+  -llvmlibc-*,
+  -google-readability-namespace-comments,
+  -llvm-namespace-comment,
+  misc-include-cleaner
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '^src/Core/.*'
+FormatStyle: 'file'
+CheckOptions:
+  - key: readability-identifier-length.MinimumLength
+    value: '2'
+  - key: readability-identifier-length.IgnoredParameterNames
+    value: 'id,ai,x,y'

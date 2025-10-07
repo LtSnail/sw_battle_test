@@ -1,0 +1,225 @@
+name: Multi-Platform Build and Simulation Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Ubuntu 22.04
+            cmake_args: ""
+          - os: macos-latest
+            name: macOS 14
+            cmake_args: ""
+          - os: windows-latest
+            name: Windows Server 2022
+            cmake_args: "-G \"Visual Studio 17 2022\" -A x64"
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential
+    
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        # Install Xcode Command Line Tools if not present
+        xcode-select --install || true
+        # Install cmake via Homebrew
+        brew install cmake
+    
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        # Install CMake
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+    
+    - name: Configure CMake
+      run: |
+        cmake -S . -B cmake-build-debug -DCMAKE_BUILD_TYPE=Debug ${{ matrix.cmake_args }}
+    
+    - name: Build
+      run: |
+        cmake --build cmake-build-debug --config Debug
+    
+    - name: Verify executable exists
+      run: |
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          if [ ! -f "cmake-build-debug/Debug/sw_battle_test.exe" ]; then
+            echo "Executable not found at expected location"
+            ls -la cmake-build-debug/Debug/
+            exit 1
+          fi
+        else
+          if [ ! -f "cmake-build-debug/sw_battle_test" ]; then
+            echo "Executable not found at expected location"
+            ls -la cmake-build-debug/
+            exit 1
+          fi
+        fi
+    
+    - name: Test basic simulation (Ubuntu/macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        echo "Running basic simulation test..."
+        ./cmake-build-debug/sw_battle_test commands_example.txt > simulation_output.txt
+        echo "Simulation output:"
+        cat simulation_output.txt
+    
+    - name: Test basic simulation (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        echo "Running basic simulation test..."
+        cmake-build-debug\Debug\sw_battle_test.exe commands_example.txt > simulation_output.txt
+        echo "Simulation output:"
+        type simulation_output.txt
+    
+    - name: Validate simulation results
+      run: |
+        echo "Validating simulation output..."
+        
+        # Check for expected events in the output
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          if (! findstr /C:"MAP_CREATED" simulation_output.txt > nul); then
+            echo "ERROR: MAP_CREATED event not found"
+            exit 1
+          fi
+          if (! findstr /C:"UNIT_SPAWNED" simulation_output.txt > nul); then
+            echo "ERROR: UNIT_SPAWNED events not found"
+            exit 1
+          fi
+          if (! findstr /C:"MARCH_STARTED" simulation_output.txt > nul); then
+            echo "ERROR: MARCH_STARTED events not found"
+            exit 1
+          fi
+          if (! findstr /C:"SIMULATION_STARTED" simulation_output.txt > nul); then
+            echo "ERROR: SIMULATION_STARTED event not found"
+            exit 1
+          fi
+          if (! findstr /C:"SIMULATION_ENDED" simulation_output.txt > nul); then
+            echo "ERROR: SIMULATION_ENDED event not found"
+            exit 1
+          fi
+        else
+          if ! grep -q "MAP_CREATED" simulation_output.txt; then
+            echo "ERROR: MAP_CREATED event not found"
+            exit 1
+          fi
+          if ! grep -q "UNIT_SPAWNED" simulation_output.txt; then
+            echo "ERROR: UNIT_SPAWNED events not found"
+            exit 1
+          fi
+          if ! grep -q "MARCH_STARTED" simulation_output.txt; then
+            echo "ERROR: MARCH_STARTED events not found"
+            exit 1
+          fi
+          if ! grep -q "SIMULATION_STARTED" simulation_output.txt; then
+            echo "ERROR: SIMULATION_STARTED event not found"
+            exit 1
+          fi
+          if ! grep -q "SIMULATION_ENDED" simulation_output.txt; then
+            echo "ERROR: SIMULATION_ENDED event not found"
+            exit 1
+          fi
+        fi
+        
+        echo "✅ All required events found in simulation output"
+    
+    - name: Test error handling
+      run: |
+        echo "Testing error handling..."
+        
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          # Test with non-existent file
+          if (cmake-build-debug\Debug\sw_battle_test.exe nonexistent.txt 2>error_output.txt); then
+            echo "ERROR: Should have failed with non-existent file"
+            exit 1
+          fi
+          echo "Error handling test passed (Windows)"
+        else
+          # Test with non-existent file
+          if ./cmake-build-debug/sw_battle_test nonexistent.txt 2>error_output.txt; then
+            echo "ERROR: Should have failed with non-existent file"
+            exit 1
+          fi
+          echo "Error handling test passed"
+        fi
+    
+    - name: Count simulation events
+      run: |
+        echo "Analyzing simulation output..."
+        
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          MAP_EVENTS=$(findstr /C:"MAP_CREATED" simulation_output.txt | find /C /V "")
+          UNIT_SPAWNED=$(findstr /C:"UNIT_SPAWNED" simulation_output.txt | find /C /V "")
+          MARCH_STARTED=$(findstr /C:"MARCH_STARTED" simulation_output.txt | find /C /V "")
+          UNIT_MOVED=$(findstr /C:"UNIT_MOVED" simulation_output.txt | find /C /V "")
+          UNIT_ATTACKED=$(findstr /C:"UNIT_ATTACKED" simulation_output.txt | find /C /V "")
+          SIMULATION_STARTED=$(findstr /C:"SIMULATION_STARTED" simulation_output.txt | find /C /V "")
+          SIMULATION_ENDED=$(findstr /C:"SIMULATION_ENDED" simulation_output.txt | find /C /V "")
+        else
+          MAP_EVENTS=$(grep -c "MAP_CREATED" simulation_output.txt)
+          UNIT_SPAWNED=$(grep -c "UNIT_SPAWNED" simulation_output.txt)
+          MARCH_STARTED=$(grep -c "MARCH_STARTED" simulation_output.txt)
+          UNIT_MOVED=$(grep -c "UNIT_MOVED" simulation_output.txt)
+          UNIT_ATTACKED=$(grep -c "UNIT_ATTACKED" simulation_output.txt)
+          SIMULATION_STARTED=$(grep -c "SIMULATION_STARTED" simulation_output.txt)
+          SIMULATION_ENDED=$(grep -c "SIMULATION_ENDED" simulation_output.txt)
+        fi
+        
+        echo "📊 Simulation Event Summary:"
+        echo "  MAP_CREATED: $MAP_EVENTS"
+        echo "  UNIT_SPAWNED: $UNIT_SPAWNED"
+        echo "  MARCH_STARTED: $MARCH_STARTED"
+        echo "  UNIT_MOVED: $UNIT_MOVED"
+        echo "  UNIT_ATTACKED: $UNIT_ATTACKED"
+        echo "  SIMULATION_STARTED: $SIMULATION_STARTED"
+        echo "  SIMULATION_ENDED: $SIMULATION_ENDED"
+        
+        # Validate expected counts
+        if [ "$MAP_EVENTS" -ne 1 ]; then
+          echo "ERROR: Expected exactly 1 MAP_CREATED event, got $MAP_EVENTS"
+          exit 1
+        fi
+        
+        if [ "$UNIT_SPAWNED" -ne 3 ]; then
+          echo "ERROR: Expected exactly 3 UNIT_SPAWNED events, got $UNIT_SPAWNED"
+          exit 1
+        fi
+        
+        if [ "$MARCH_STARTED" -ne 3 ]; then
+          echo "ERROR: Expected exactly 3 MARCH_STARTED events, got $MARCH_STARTED"
+          exit 1
+        fi
+        
+        if [ "$SIMULATION_STARTED" -ne 1 ]; then
+          echo "ERROR: Expected exactly 1 SIMULATION_STARTED event, got $SIMULATION_STARTED"
+          exit 1
+        fi
+        
+        if [ "$SIMULATION_ENDED" -ne 1 ]; then
+          echo "ERROR: Expected exactly 1 SIMULATION_ENDED event, got $SIMULATION_ENDED"
+          exit 1
+        fi
+        
+        echo "✅ Event count validation passed"
+    
+    - name: Upload simulation output as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: simulation-output-${{ matrix.name }}
+        path: simulation_output.txt
+        retention-days: 7

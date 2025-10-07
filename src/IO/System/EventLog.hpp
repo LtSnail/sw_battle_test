@@ -1,9 +1,9 @@
 #pragma once
 
 #include "details/PrintFieldVisitor.hpp"
+
 #include <iostream>
-#include <typeindex>
-#include <unordered_map>
+#include <type_traits>
 
 namespace sw
 {
@@ -11,9 +11,10 @@ namespace sw
 	{
 	public:
 		template <class TEvent>
-		void log(uint64_t tick, TEvent&& event)
+		void log(uint32_t turn, TEvent&& event)
 		{
-			std::cout << "[" << tick << "] " << TEvent::Name << " ";
+			using EventType = std::decay_t<TEvent>;
+			std::cout << turn << " " << EventType::Name << " ";
 			PrintFieldVisitor visitor(std::cout);
 			event.visit(visitor);
 			std::cout << std::endl;

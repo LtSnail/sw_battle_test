@@ -11,6 +11,7 @@
 
 #include <algorithm>  // For std::max
 #include <cstddef>
+#include <cstdint>    // For uint32_t, std::uint8_t
 #include <cstdlib>
 #include <functional>
 

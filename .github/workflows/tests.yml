@@ -45,8 +45,6 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: cmd
       run: |
-        # CMake is included with Visual Studio Build Tools
-        # Verify cmake is available
         cmake --version
     
     - name: Configure CMake
@@ -99,7 +97,6 @@ jobs:
       run: |
         echo "Validating simulation output..."
 
-        # Check for expected events in the output
         if "%RUNNER_OS%" == "Windows" (
           findstr /C:"MAP_CREATED" simulation_output.txt >nul || (echo "ERROR: MAP_CREATED event not found" && exit 1)
           findstr /C:"UNIT_SPAWNED" simulation_output.txt >nul || (echo "ERROR: UNIT_SPAWNED events not found" && exit 1)
@@ -191,7 +188,6 @@ jobs:
           echo "  SIMULATION_ENDED: $SIMULATION_ENDED"
         )
 
-        # Validate expected counts
         if "%RUNNER_OS%" == "Windows" (
           if %MAP_EVENTS% NEQ 1 (echo "ERROR: Expected exactly 1 MAP_CREATED event, got %MAP_EVENTS%" && exit 1)
           if %UNIT_SPAWNED% NEQ 3 (echo "ERROR: Expected exactly 3 UNIT_SPAWNED events, got %UNIT_SPAWNED%" && exit 1)
